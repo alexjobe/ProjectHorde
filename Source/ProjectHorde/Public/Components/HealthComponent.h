@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "HealthComponent.generated.h"
 
+// Custom OnHealthChanged event
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_SixParams(FOnHealthChangedSignature, UHealthComponent*, HealthComp, float, Health, float, HealthChangeAmount, const UDamageType*, DamageType, AController*, InstigatedBy, AActor*, DamageCauser);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PROJECTHORDE_API UHealthComponent : public UActorComponent
@@ -39,10 +41,10 @@ protected:
 
 	// RepNotify for changes made to current health
 	UFUNCTION()
-	void OnRep_CurrentHealth();
+	void OnRep_CurrentHealth(float OldHealth);
 
 	// Response to health being updated. Called on the server immediately after modification, and on clients in response to a RepNotify
-	void OnHealthUpdate();
+	void OnHealthUpdate(float OldHealth);
 
 public:
 
@@ -54,5 +56,8 @@ public:
 
 	// Clamps the value between 0 and DefaultHealth and calls OnHealthUpdate. Should only be called on the server.
 	UFUNCTION(BlueprintCallable, Category = "Health")
-	void SetCurrentHealth(float healthValue);
+	void SetCurrentHealth(float NewHealth);
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FOnHealthChangedSignature OnHealthChanged;
 };

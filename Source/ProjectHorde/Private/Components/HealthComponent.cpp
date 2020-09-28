@@ -35,14 +35,18 @@ void UHealthComponent::HandleTakeAnyDamage(AActor* DamagedActor, float Damage, c
 	SetCurrentHealth(CurrentHealth - Damage);
 }
 
-void UHealthComponent::OnRep_CurrentHealth()
+void UHealthComponent::OnRep_CurrentHealth(float OldHealth)
 {
-	OnHealthUpdate();
+	OnHealthUpdate(OldHealth);
 }
 
-void UHealthComponent::OnHealthUpdate()
+void UHealthComponent::OnHealthUpdate(float OldHealth)
 {
 	AActor* MyOwner = GetOwner();
+
+	float HealthChangeAmount = CurrentHealth - OldHealth;
+	OnHealthChanged.Broadcast(this, CurrentHealth, HealthChangeAmount, nullptr, nullptr, nullptr);
+
 	if (MyOwner && MyOwner->HasAuthority())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Health Changed: %s"), *FString::SanitizeFloat(CurrentHealth));
@@ -59,8 +63,9 @@ void UHealthComponent::SetCurrentHealth(float NewHealth)
 	AActor* MyOwner = GetOwner();
 	if (MyOwner && MyOwner->HasAuthority())
 	{
+		float OldHealth = CurrentHealth;
 		CurrentHealth = FMath::Clamp(NewHealth, 0.f, DefaultHealth);
-		OnHealthUpdate();
+		OnHealthUpdate(OldHealth);
 	}
 }
 
