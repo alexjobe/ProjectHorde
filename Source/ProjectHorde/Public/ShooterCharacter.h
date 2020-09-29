@@ -15,6 +15,9 @@ public:
 	// Sets default values for this character's properties
 	AShooterCharacter();
 
+	// Property replication
+	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components");
 	class UCameraComponent* CameraComp = nullptr;
@@ -35,6 +38,8 @@ protected:
 	// If true, we are in the process of firing
 	bool bIsFiringWeapon;
 
+	// Pawn died
+	UPROPERTY(Replicated, BlueprintReadOnly, Category = "Gameplay")
 	bool bIsDead;
 
 	// Handles fire rate delay between shots
@@ -54,10 +59,6 @@ protected:
 
 	// Rate of 0 to 1, where 1 means 100% of desired turn rate
 	void LookUpAtRate(float Rate);
-
-	void BeginCrouch();
-
-	void EndCrouch();
 
 	// Function for beginning weapon fire
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")

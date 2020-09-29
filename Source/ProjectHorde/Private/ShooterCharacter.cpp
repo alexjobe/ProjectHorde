@@ -8,6 +8,7 @@
 #include "Components/HealthComponent.h"
 #include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Net/UnrealNetwork.h"
 
 // Sets default values
 AShooterCharacter::AShooterCharacter()
@@ -62,9 +63,6 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterCharacter::LookUpAtRate);
 
-	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShooterCharacter::BeginCrouch);
-	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AShooterCharacter::EndCrouch);
-
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 
@@ -98,16 +96,6 @@ void AShooterCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
-void AShooterCharacter::BeginCrouch()
-{
-	Crouch();
-}
-
-void AShooterCharacter::EndCrouch()
-{
-	UnCrouch();
-}
-
 void AShooterCharacter::StartFire()
 {
 	if (!bIsFiringWeapon)
@@ -135,4 +123,11 @@ void AShooterCharacter::OnHealthChanged(UHealthComponent* HealthComponent, float
 		DetachFromControllerPendingDestroy();
 		SetLifeSpan(10.f);
 	}
+}
+
+void AShooterCharacter::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AShooterCharacter, bIsDead);
 }
