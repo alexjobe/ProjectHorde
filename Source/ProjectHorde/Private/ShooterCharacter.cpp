@@ -91,19 +91,11 @@ void AShooterCharacter::StartFire()
 	{
 		bIsFiringWeapon = true;
 		GetWorld()->GetTimerManager().SetTimer(FiringTimer, this, &AShooterCharacter::StopFire, FireRate, false);
-		HandleFire();
+		if (GunComp) GunComp->Shoot();
 	}
 }
 
 void AShooterCharacter::StopFire()
 {
 	bIsFiringWeapon = false;
-}
-
-void AShooterCharacter::HandleFire_Implementation()
-{
-	if (GunComp)
-	{
-		GunComp->Shoot();
-	}
 }

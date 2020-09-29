@@ -49,8 +49,6 @@ void UHealthComponent::OnHealthUpdate(float OldHealth)
 
 	if (MyOwner && MyOwner->HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Health Changed: %s"), *FString::SanitizeFloat(CurrentHealth));
-
 		if (CurrentHealth <= 0.f)
 		{
 			bIsDead = true;

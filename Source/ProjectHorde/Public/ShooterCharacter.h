@@ -58,10 +58,6 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	void StopFire();
 
-	// Server function for spawning projectiles
-	UFUNCTION(Server, Reliable)
-	void HandleFire();
-
 	// Handles fire rate delay between shots
 	FTimerHandle FiringTimer;
 

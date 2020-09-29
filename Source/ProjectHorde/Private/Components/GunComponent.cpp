@@ -5,6 +5,7 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "ProjectHorde/ProjectHorde.h"
 
@@ -13,22 +14,23 @@ UGunComponent::UGunComponent()
 {
 	MaxRange = 1000.f;
 	Damage = 20.f;
+	SetIsReplicatedByDefault(true);
 }
-
 
 void UGunComponent::Shoot()
 {
 	AActor* MyOwner = GetOwner();
 	if (!MyOwner) return;
 
-	AController* OwnerController = GetOwnerController();
-	if (!OwnerController) return;
+	AController* MyController = MyOwner->GetInstigatorController();
+	if (!MyController) return;
 
-	if (MeshComp)
+	if (!MyOwner->HasAuthority())
 	{
-		UGameplayStatics::SpawnEmitterAttached(MuzzleGlow, MeshComp, TEXT("Muzzle"));
-		UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, MeshComp, TEXT("Muzzle_01"));
+		ServerShoot();
 	}
+
+	PlayFireEffects(HitScanTrace.TraceTo);
 
 	FHitResult Hit;
 	FVector ShotDirection;
@@ -36,13 +38,19 @@ void UGunComponent::Shoot()
 
 	if (bTraceSuccess)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, Hit.Location, ShotDirection.Rotation());
-
 		AActor* HitActor = Hit.GetActor();
 		if (HitActor)
 		{
-			UGameplayStatics::ApplyPointDamage(HitActor, Damage, ShotDirection, Hit, OwnerController, MyOwner, DamageType);
+			UGameplayStatics::ApplyPointDamage(HitActor, Damage, ShotDirection, Hit, MyController, MyOwner, DamageType);
 		}
+
+		if (MyOwner->HasAuthority())
+		{
+			HitScanTrace.TraceTo = Hit.Location;
+			HitScanTrace.SurfaceType = EPhysicalSurface::SurfaceType_Default;
+		}
+
+		PlayImpactEffects(HitScanTrace.SurfaceType, Hit.Location);
 	}
 }
 
@@ -66,12 +74,12 @@ bool UGunComponent::ShotTrace(FHitResult& Hit, FVector& ShotDirection)
 	AActor* MyOwner = GetOwner();
 	if (!MyOwner) return false;
 
-	AController* OwnerController = GetOwnerController();
-	if (!OwnerController) return false;
+	AController* MyController = MyOwner->GetInstigatorController();
+	if (!MyController) return false;
 
 	FVector TraceStart;
 	FRotator TraceRotation;
-	OwnerController->GetPlayerViewPoint(TraceStart, TraceRotation);
+	MyController->GetPlayerViewPoint(TraceStart, TraceRotation);
 
 	ShotDirection = TraceRotation.Vector();
 
@@ -84,3 +92,55 @@ bool UGunComponent::ShotTrace(FHitResult& Hit, FVector& ShotDirection)
 	return GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, COLLISION_WEAPON, Params);
 }
 
+void UGunComponent::OnRep_HitScanTrace()
+{
+	// Play cosmetic effects
+	PlayFireEffects(HitScanTrace.TraceTo);
+
+	PlayImpactEffects(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
+}
+
+void UGunComponent::PlayFireEffects(FVector TracerEndPoint)
+{
+	if (!MeshComp) return;
+
+	if (MuzzleGlow)
+	{
+		UGameplayStatics::SpawnEmitterAttached(MuzzleGlow, MeshComp, TEXT("Muzzle"));
+	}
+
+	if (MuzzleFlash)
+	{
+		UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, MeshComp, TEXT("Muzzle_01"));
+	}
+}
+
+void UGunComponent::PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint)
+{
+	if (MeshComp && ImpactEffect)
+	{
+		FVector MuzzleLocation = MeshComp->GetSocketLocation(TEXT("Muzzle"));
+
+		FVector ShotDirection = ImpactPoint - MuzzleLocation;
+		ShotDirection.Normalize();
+
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, ImpactPoint, ShotDirection.Rotation());
+	}
+}
+
+void UGunComponent::ServerShoot_Implementation()
+{
+	Shoot();
+}
+
+bool UGunComponent::ServerShoot_Validate()
+{
+	return true;
+}
+
+void UGunComponent::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME_CONDITION(UGunComponent, HitScanTrace, COND_SkipOwner);
+}
