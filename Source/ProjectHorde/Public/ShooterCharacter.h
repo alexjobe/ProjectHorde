@@ -28,6 +28,18 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components");
 	class UHealthComponent* HealthComp = nullptr;
 
+	// Delay between shots in seconds
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Weapon")
+	float FireRate;
+
+	// If true, we are in the process of firing
+	bool bIsFiringWeapon;
+
+	bool bIsDead;
+
+	// Handles fire rate delay between shots
+	FTimerHandle FiringTimer;
+
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
@@ -43,12 +55,9 @@ protected:
 	// Rate of 0 to 1, where 1 means 100% of desired turn rate
 	void LookUpAtRate(float Rate);
 
-	// Delay between shots in seconds
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Weapon")
-	float FireRate;
+	void BeginCrouch();
 
-	// If true, we are in the process of firing
-	bool bIsFiringWeapon;
+	void EndCrouch();
 
 	// Function for beginning weapon fire
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
@@ -58,14 +67,10 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	void StopFire();
 
-	// Handles fire rate delay between shots
-	FTimerHandle FiringTimer;
-
+	UFUNCTION()
+	void OnHealthChanged(class UHealthComponent* HealthComponent, float Health, float HealthChangeAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
 
 public:
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 	// Base turn rate, in deg/sec
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera)
 	float BaseTurnRate;
@@ -73,4 +78,7 @@ public:
 	// Base look up/down rate, in deg/sec
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Camera)
 	float BaseLookUpRate;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 };

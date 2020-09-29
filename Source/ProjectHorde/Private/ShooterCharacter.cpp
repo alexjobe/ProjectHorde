@@ -3,8 +3,10 @@
 
 #include "ShooterCharacter.h"
 #include "Camera/CameraComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/GunComponent.h"
 #include "Components/HealthComponent.h"
+#include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
 // Sets default values
@@ -31,12 +33,20 @@ AShooterCharacter::AShooterCharacter()
 
 	// Create health component
 	HealthComp = CreateDefaultSubobject<UHealthComponent>(TEXT("HealthComp"));
+	bIsDead = false;
+
+	GetMovementComponent()->NavAgentProps.bCanCrouch = true;
 }
 
 // Called when the game starts or when spawned
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (HealthComp)
+	{
+		HealthComp->OnHealthChanged.AddDynamic(this, &AShooterCharacter::OnHealthChanged);
+	}
 }
 
 // Called to bind functionality to input
@@ -51,6 +61,9 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("TurnRate", this, &AShooterCharacter::TurnAtRate);
 	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
 	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterCharacter::LookUpAtRate);
+
+	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &AShooterCharacter::BeginCrouch);
+	PlayerInputComponent->BindAction("Crouch", IE_Released, this, &AShooterCharacter::EndCrouch);
 
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
@@ -85,6 +98,16 @@ void AShooterCharacter::LookUpAtRate(float Rate)
 	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());
 }
 
+void AShooterCharacter::BeginCrouch()
+{
+	Crouch();
+}
+
+void AShooterCharacter::EndCrouch()
+{
+	UnCrouch();
+}
+
 void AShooterCharacter::StartFire()
 {
 	if (!bIsFiringWeapon)
@@ -98,4 +121,18 @@ void AShooterCharacter::StartFire()
 void AShooterCharacter::StopFire()
 {
 	bIsFiringWeapon = false;
+}
+
+void AShooterCharacter::OnHealthChanged(UHealthComponent* HealthComponent, float Health, float HealthChangeAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)
+{
+	if (Health <= 0.f && !bIsDead)
+	{
+		// Time to die
+		bIsDead = true;
+		GetMovementComponent()->StopMovementImmediately();
+		GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+		DetachFromControllerPendingDestroy();
+		SetLifeSpan(10.f);
+	}
 }
