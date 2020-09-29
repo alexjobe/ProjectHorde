@@ -35,7 +35,6 @@ public:
 	void Shoot();
 
 protected:
-
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay")
 	TSubclassOf<UDamageType> DamageType;
 
@@ -43,7 +42,10 @@ protected:
 	float MaxRange;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
-	UParticleSystem* ImpactEffect = nullptr;
+	UParticleSystem* DefaultImpactEffect = nullptr;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
+	UParticleSystem* FleshImpactEffect = nullptr;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	UParticleSystem* MuzzleFlash = nullptr;
@@ -63,6 +65,8 @@ protected:
 
 	bool ShotTrace(FHitResult& Hit, FVector& ShotDirection);
 
+	void ProcessHit(FHitResult& Hit, FVector& ShotDirection);
+
 	UFUNCTION()
 	void OnRep_HitScanTrace();
 
@@ -77,5 +81,8 @@ protected:
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
-	float Damage;
+	float BaseDamage;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+	float CritHitMultiplier;
 };

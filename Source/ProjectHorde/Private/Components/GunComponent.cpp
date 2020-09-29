@@ -7,14 +7,24 @@
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 #include "ProjectHorde/ProjectHorde.h"
 
 // Sets default values for this component's properties
 UGunComponent::UGunComponent()
 {
-	MaxRange = 1000.f;
-	Damage = 20.f;
+	MaxRange = 5000.f;
+	BaseDamage = 20.f;
+	CritHitMultiplier = 3.f;
 	SetIsReplicatedByDefault(true);
+}
+
+// Called when the game starts
+void UGunComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	MeshComp = Cast<USkeletalMeshComponent>(GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
 }
 
 void UGunComponent::Shoot()
@@ -28,6 +38,7 @@ void UGunComponent::Shoot()
 	if (!MyOwner->HasAuthority())
 	{
 		ServerShoot();
+		return;
 	}
 
 	PlayFireEffects(HitScanTrace.TraceTo);
@@ -38,28 +49,37 @@ void UGunComponent::Shoot()
 
 	if (bTraceSuccess)
 	{
-		AActor* HitActor = Hit.GetActor();
-		if (HitActor)
-		{
-			UGameplayStatics::ApplyPointDamage(HitActor, Damage, ShotDirection, Hit, MyController, MyOwner, DamageType);
-		}
-
-		if (MyOwner->HasAuthority())
-		{
-			HitScanTrace.TraceTo = Hit.Location;
-			HitScanTrace.SurfaceType = EPhysicalSurface::SurfaceType_Default;
-		}
-
-		PlayImpactEffects(HitScanTrace.SurfaceType, Hit.Location);
+		ProcessHit(Hit, ShotDirection);
 	}
 }
 
-// Called when the game starts
-void UGunComponent::BeginPlay()
+void UGunComponent::ProcessHit(FHitResult& Hit, FVector& ShotDirection)
 {
-	Super::BeginPlay();
+	AActor* MyOwner = GetOwner();
+	if (!MyOwner) return;
 
-	MeshComp = Cast<USkeletalMeshComponent>(GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+	AController* MyController = MyOwner->GetInstigatorController();
+	if (!MyController) return;
+
+	AActor* HitActor = Hit.GetActor();
+	EPhysicalSurface SurfaceType = UPhysicalMaterial::DetermineSurfaceType(Hit.PhysMaterial.Get());
+
+	float ActualDamage = BaseDamage;
+
+	if (SurfaceType == SURFACE_FLESH_CRITICAL)
+	{
+		ActualDamage = BaseDamage * CritHitMultiplier;
+	}
+
+	if (HitActor)
+	{
+		UGameplayStatics::ApplyPointDamage(HitActor, ActualDamage, ShotDirection, Hit, MyController, MyOwner, DamageType);
+	}
+
+	HitScanTrace.TraceTo = Hit.Location;
+	HitScanTrace.SurfaceType = SurfaceType;
+
+	PlayImpactEffects(SurfaceType, Hit.Location);
 }
 
 AController* UGunComponent::GetOwnerController() const
@@ -85,11 +105,13 @@ bool UGunComponent::ShotTrace(FHitResult& Hit, FVector& ShotDirection)
 
 	FVector TraceEnd = TraceStart + (ShotDirection * MaxRange);
 
-	FCollisionQueryParams Params;
-	Params.AddIgnoredActor(MyOwner);
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(MyOwner);
+	QueryParams.bTraceComplex = true;
+	QueryParams.bReturnPhysicalMaterial = true;
 
 	//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::White, false, 1.f, 0, 1.f);
-	return GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, COLLISION_WEAPON, Params);
+	return GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, COLLISION_WEAPON, QueryParams);
 }
 
 void UGunComponent::OnRep_HitScanTrace()
@@ -117,14 +139,27 @@ void UGunComponent::PlayFireEffects(FVector TracerEndPoint)
 
 void UGunComponent::PlayImpactEffects(EPhysicalSurface SurfaceType, FVector ImpactPoint)
 {
-	if (MeshComp && ImpactEffect)
+	UParticleSystem* SelectedImpactEffect = nullptr;
+
+	switch (SurfaceType)
+	{
+	case SURFACE_FLESH_DEFAULT:
+	case SURFACE_FLESH_CRITICAL:
+		SelectedImpactEffect = FleshImpactEffect;
+		break;
+	default:
+		SelectedImpactEffect = DefaultImpactEffect;
+		break;
+	}
+
+	if (MeshComp && SelectedImpactEffect)
 	{
 		FVector MuzzleLocation = MeshComp->GetSocketLocation(TEXT("Muzzle"));
 
 		FVector ShotDirection = ImpactPoint - MuzzleLocation;
 		ShotDirection.Normalize();
 
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactEffect, ImpactPoint, ShotDirection.Rotation());
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), SelectedImpactEffect, ImpactPoint, ShotDirection.Rotation());
 	}
 }
 
@@ -142,5 +177,5 @@ void UGunComponent::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLi
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME_CONDITION(UGunComponent, HitScanTrace, COND_SkipOwner);
+	DOREPLIFETIME(UGunComponent, HitScanTrace);
 }
