@@ -41,6 +41,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
 	float MaxRange;
 
+	// Bullet spread in degrees
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay", meta = (ClampMin = 0.f))
+	float BulletSpread;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	UParticleSystem* DefaultImpactEffect = nullptr;
 
@@ -64,6 +68,8 @@ protected:
 	AController* GetOwnerController() const;
 
 	bool ShotTrace(FHitResult& Hit, FVector& ShotDirection);
+
+	FVector ApplyBulletSpread(const FVector& ShotDirection);
 
 	void ProcessHit(FHitResult& Hit, FVector& ShotDirection);
 

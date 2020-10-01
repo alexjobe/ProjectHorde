@@ -16,7 +16,6 @@ UGunComponent::UGunComponent()
 	MaxRange = 5000.f;
 	BaseDamage = 20.f;
 	CritHitMultiplier = 3.f;
-	BulletSpread = 1.f;
 	SetIsReplicatedByDefault(true);
 }
 
@@ -103,7 +102,6 @@ bool UGunComponent::ShotTrace(FHitResult& Hit, FVector& ShotDirection)
 	MyController->GetPlayerViewPoint(TraceStart, TraceRotation);
 
 	ShotDirection = TraceRotation.Vector();
-	ShotDirection = ApplyBulletSpread(ShotDirection);
 
 	FVector TraceEnd = TraceStart + (ShotDirection * MaxRange);
 
@@ -114,12 +112,6 @@ bool UGunComponent::ShotTrace(FHitResult& Hit, FVector& ShotDirection)
 
 	//DrawDebugLine(GetWorld(), TraceStart, TraceEnd, FColor::White, false, 1.f, 0, 1.f);
 	return GetWorld()->LineTraceSingleByChannel(Hit, TraceStart, TraceEnd, COLLISION_WEAPON, QueryParams);
-}
-
-FVector UGunComponent::ApplyBulletSpread(const FVector& ShotDirection)
-{
-	float HalfRad = FMath::DegreesToRadians(BulletSpread);
-	return FMath::VRandCone(ShotDirection, HalfRad);
 }
 
 void UGunComponent::OnRep_HitScanTrace()
