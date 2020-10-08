@@ -68,6 +68,7 @@ void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 
 	// Handle firing projectiles
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &AShooterCharacter::StartFire);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &AShooterCharacter::Reload);
 }
 
 void AShooterCharacter::MoveForward(float Value)
@@ -109,6 +110,11 @@ void AShooterCharacter::StartFire()
 void AShooterCharacter::StopFire()
 {
 	bIsFiringWeapon = false;
+}
+
+void AShooterCharacter::Reload()
+{
+	if (GunComp) GunComp->StartReload();
 }
 
 void AShooterCharacter::OnHealthChanged(UHealthComponent* HealthComponent, float Health, float HealthChangeAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)

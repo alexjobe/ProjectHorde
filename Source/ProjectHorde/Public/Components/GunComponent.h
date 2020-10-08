@@ -32,8 +32,6 @@ public:
 	// Property replication
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-	void Shoot();
-
 protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay|Damage")
 	TSubclassOf<UDamageType> DamageType;
@@ -49,13 +47,22 @@ protected:
 	int32 MaxAmmo;
 
 	UPROPERTY(VisibleAnywhere, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
-	int32 CurrentAmmo;
+	int32 AmmoInReserve;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
 	int32 ClipSize;
 
 	UPROPERTY(VisibleAnywhere, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
 	int32 NumRoundsInClip;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Ammo")
+	float ReloadTime;
+
+	// If true, we are in the process of reloading
+	bool bIsReloading;
+
+	// Handles reload delay
+	FTimerHandle ReloadTimer;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	UParticleSystem* DefaultImpactEffect = nullptr;
@@ -85,7 +92,7 @@ protected:
 
 	void ProcessHit(FHitResult& Hit, FVector& ShotDirection);
 
-	void Reload();
+	void FinishReloading();
 
 	UFUNCTION()
 	void OnRep_HitScanTrace();
@@ -99,6 +106,10 @@ protected:
 	void ServerShoot();
 
 public:
+
+	void Shoot();
+
+	void StartReload();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay|Damage")
 	float BaseDamage;

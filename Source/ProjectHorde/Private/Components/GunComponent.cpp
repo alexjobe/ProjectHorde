@@ -17,6 +17,10 @@ UGunComponent::UGunComponent()
 	BaseDamage = 20.f;
 	CritHitMultiplier = 3.f;
 	BulletSpread = 1.f;
+	MaxAmmo = 50;
+	ClipSize = 10;
+	ReloadTime = 2.f;
+
 	SetIsReplicatedByDefault(true);
 }
 
@@ -26,10 +30,16 @@ void UGunComponent::BeginPlay()
 	Super::BeginPlay();
 
 	MeshComp = Cast<USkeletalMeshComponent>(GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+
+	bIsReloading = false;
+	AmmoInReserve = MaxAmmo;
+	NumRoundsInClip = 0;
 }
 
 void UGunComponent::Shoot()
 {
+	if (bIsReloading) return;
+
 	AActor* MyOwner = GetOwner();
 	if (!MyOwner) return;
 
@@ -41,6 +51,17 @@ void UGunComponent::Shoot()
 		ServerShoot();
 		return;
 	}
+
+	if (NumRoundsInClip < 1)
+	{
+		StartReload();
+		return;
+	}
+
+	NumRoundsInClip--;
+
+	UE_LOG(LogTemp, Warning, TEXT("Rounds in clip: %s"), *FString::FromInt(NumRoundsInClip));
+	UE_LOG(LogTemp, Warning, TEXT("Ammo left: %s"), *FString::FromInt(AmmoInReserve));
 
 	PlayFireEffects(HitScanTrace.TraceTo);
 
@@ -83,9 +104,25 @@ void UGunComponent::ProcessHit(FHitResult& Hit, FVector& ShotDirection)
 	PlayImpactEffects(SurfaceType, Hit.Location);
 }
 
-void UGunComponent::Reload()
+void UGunComponent::StartReload()
 {
+	if (AmmoInReserve > 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Reloading..."));
+		bIsReloading = true;
+		GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &UGunComponent::FinishReloading, ReloadTime, false);
+	}
+}
 
+void UGunComponent::FinishReloading()
+{
+	int32 ReloadAmount = FMath::Min(ClipSize - NumRoundsInClip, AmmoInReserve);
+	NumRoundsInClip += ReloadAmount;
+	AmmoInReserve -= ReloadAmount;
+	bIsReloading = false;
+
+	UE_LOG(LogTemp, Warning, TEXT("Rounds in clip: %s"), *FString::FromInt(NumRoundsInClip));
+	UE_LOG(LogTemp, Warning, TEXT("Ammo left: %s"), *FString::FromInt(AmmoInReserve));
 }
 
 AController* UGunComponent::GetOwnerController() const
