@@ -35,15 +35,27 @@ public:
 	void Shoot();
 
 protected:
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay|Damage")
 	TSubclassOf<UDamageType> DamageType;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay")
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Shooting")
 	float MaxRange;
 
 	// Bullet spread in degrees
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay", meta = (ClampMin = 0.f))
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Shooting", meta = (ClampMin = 0.f))
 	float BulletSpread;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
+	int32 MaxAmmo;
+
+	UPROPERTY(VisibleAnywhere, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
+	int32 CurrentAmmo;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
+	int32 ClipSize;
+
+	UPROPERTY(VisibleAnywhere, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
+	int32 NumRoundsInClip;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	UParticleSystem* DefaultImpactEffect = nullptr;
@@ -73,6 +85,8 @@ protected:
 
 	void ProcessHit(FHitResult& Hit, FVector& ShotDirection);
 
+	void Reload();
+
 	UFUNCTION()
 	void OnRep_HitScanTrace();
 
@@ -86,9 +100,9 @@ protected:
 
 public:
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay|Damage")
 	float BaseDamage;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Damage")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay|Damage")
 	float CritHitMultiplier;
 };

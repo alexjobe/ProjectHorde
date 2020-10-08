@@ -83,6 +83,11 @@ void UGunComponent::ProcessHit(FHitResult& Hit, FVector& ShotDirection)
 	PlayImpactEffects(SurfaceType, Hit.Location);
 }
 
+void UGunComponent::Reload()
+{
+
+}
+
 AController* UGunComponent::GetOwnerController() const
 {
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
