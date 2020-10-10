@@ -21,6 +21,10 @@ UGunComponent::UGunComponent()
 	ClipSize = 10;
 	ReloadTime = 2.f;
 
+	bIsReloading = false;
+	AmmoInReserve = FMath::Max(MaxAmmo - ClipSize, 0);
+	NumRoundsInClip = FMath::Max(ClipSize, 0);
+
 	SetIsReplicatedByDefault(true);
 }
 
@@ -30,15 +34,16 @@ void UGunComponent::BeginPlay()
 	Super::BeginPlay();
 
 	MeshComp = Cast<USkeletalMeshComponent>(GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
-
-	bIsReloading = false;
-	AmmoInReserve = MaxAmmo;
-	NumRoundsInClip = 0;
 }
 
 void UGunComponent::Shoot()
 {
-	if (bIsReloading) return;
+	if (bIsReloading)
+	{
+		GetOwner()->GetWorldTimerManager().ClearTimer(ReloadTimer);
+		bIsReloading = false;
+		UE_LOG(LogTemp, Warning, TEXT("Reload cancelled"));
+	}
 
 	AActor* MyOwner = GetOwner();
 	if (!MyOwner) return;
@@ -106,11 +111,11 @@ void UGunComponent::ProcessHit(FHitResult& Hit, FVector& ShotDirection)
 
 void UGunComponent::StartReload()
 {
-	if (AmmoInReserve > 0)
+	if (AmmoInReserve > 0 && !bIsReloading)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Reloading..."));
 		bIsReloading = true;
-		GetWorld()->GetTimerManager().SetTimer(ReloadTimer, this, &UGunComponent::FinishReloading, ReloadTime, false);
+		GetOwner()->GetWorldTimerManager().SetTimer(ReloadTimer, this, &UGunComponent::FinishReloading, ReloadTime, false);
 	}
 }
 
@@ -121,8 +126,8 @@ void UGunComponent::FinishReloading()
 	AmmoInReserve -= ReloadAmount;
 	bIsReloading = false;
 
-	UE_LOG(LogTemp, Warning, TEXT("Rounds in clip: %s"), *FString::FromInt(NumRoundsInClip));
-	UE_LOG(LogTemp, Warning, TEXT("Ammo left: %s"), *FString::FromInt(AmmoInReserve));
+	//UE_LOG(LogTemp, Warning, TEXT("Rounds in clip: %s"), *FString::FromInt(NumRoundsInClip));
+	//UE_LOG(LogTemp, Warning, TEXT("Ammo left: %s"), *FString::FromInt(AmmoInReserve));
 }
 
 AController* UGunComponent::GetOwnerController() const

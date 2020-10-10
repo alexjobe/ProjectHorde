@@ -43,22 +43,23 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Shooting", meta = (ClampMin = 0.f))
 	float BulletSpread;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
 	int32 MaxAmmo;
 
-	UPROPERTY(VisibleAnywhere, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
 	int32 AmmoInReserve;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
 	int32 ClipSize;
 
-	UPROPERTY(VisibleAnywhere, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Gameplay|Ammo", meta = (ClampMin = 0.f))
 	int32 NumRoundsInClip;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Gameplay|Ammo")
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Gameplay|Ammo")
 	float ReloadTime;
 
 	// If true, we are in the process of reloading
+	UPROPERTY(BlueprintReadOnly, Category = "Gameplay|Ammo")
 	bool bIsReloading;
 
 	// Handles reload delay
@@ -109,6 +110,7 @@ public:
 
 	void Shoot();
 
+	UFUNCTION(BlueprintCallable, Category = "Gameplay|Ammo")
 	void StartReload();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay|Damage")
