@@ -42,6 +42,7 @@ void UGunComponent::Shoot()
 	{
 		GetOwner()->GetWorldTimerManager().ClearTimer(ReloadTimer);
 		bIsReloading = false;
+		OnReloadStateChanged.Broadcast(this, false, true);
 		UE_LOG(LogTemp, Warning, TEXT("Reload cancelled"));
 	}
 
@@ -115,6 +116,7 @@ void UGunComponent::StartReload()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Reloading..."));
 		bIsReloading = true;
+		OnReloadStateChanged.Broadcast(this, true, false);
 		GetOwner()->GetWorldTimerManager().SetTimer(ReloadTimer, this, &UGunComponent::FinishReloading, ReloadTime, false);
 	}
 }
@@ -124,8 +126,9 @@ void UGunComponent::FinishReloading()
 	int32 ReloadAmount = FMath::Min(ClipSize - NumRoundsInClip, AmmoInReserve);
 	NumRoundsInClip += ReloadAmount;
 	AmmoInReserve -= ReloadAmount;
+	
 	bIsReloading = false;
-
+	OnReloadStateChanged.Broadcast(this, false, false);
 	//UE_LOG(LogTemp, Warning, TEXT("Rounds in clip: %s"), *FString::FromInt(NumRoundsInClip));
 	//UE_LOG(LogTemp, Warning, TEXT("Ammo left: %s"), *FString::FromInt(AmmoInReserve));
 }

@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "GunComponent.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FReloadStateChangedSignature, UGunComponent*, GunComp, bool, bIsReloading, bool, bReloadInterrupted);
+
 // Contains information about a single hit scan weapon line trace
 USTRUCT()
 struct FHitScanTrace
@@ -118,4 +120,7 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay|Damage")
 	float CritHitMultiplier;
+
+	UPROPERTY(BlueprintAssignable, Category = "Events")
+	FReloadStateChangedSignature OnReloadStateChanged;
 };
