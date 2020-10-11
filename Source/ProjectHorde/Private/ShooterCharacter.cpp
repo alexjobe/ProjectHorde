@@ -104,6 +104,7 @@ void AShooterCharacter::StartFire()
 		bIsFiringWeapon = true;
 		GetWorld()->GetTimerManager().SetTimer(FiringTimer, this, &AShooterCharacter::StopFire, FireRate, false);
 		if (GunComp) GunComp->Shoot();
+		OnFire();
 	}
 }
 
@@ -115,6 +116,7 @@ void AShooterCharacter::StopFire()
 void AShooterCharacter::Reload()
 {
 	if (GunComp) GunComp->StartReload();
+	OnStartReload();
 }
 
 void AShooterCharacter::OnHealthChanged(UHealthComponent* HealthComponent, float Health, float HealthChangeAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser)

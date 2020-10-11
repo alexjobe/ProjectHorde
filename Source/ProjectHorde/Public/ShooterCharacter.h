@@ -68,9 +68,15 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	void StopFire();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Events")
+	void OnFire();
+
 	// Reload weapon
 	UFUNCTION(BlueprintCallable, Category = "Gameplay")
 	void Reload();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Events")
+	void OnStartReload();
 
 	UFUNCTION()
 	void OnHealthChanged(class UHealthComponent* HealthComponent, float Health, float HealthChangeAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
