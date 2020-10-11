@@ -115,6 +115,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Gameplay|Ammo")
 	void StartReload();
 
+	UFUNCTION(BlueprintCallable, Category = "Gameplay|Ammo")
+	void AddAmmo(int32 AmountToAdd);
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Gameplay|Damage")
 	float BaseDamage;
 

@@ -112,9 +112,9 @@ void UGunComponent::ProcessHit(FHitResult& Hit, FVector& ShotDirection)
 
 void UGunComponent::AddAmmo(int32 AmountToAdd)
 {
-	int32 ActualAmountToAdd = FMath::Min(MaxAmmo - AmmoInReserve - NumRoundsInClip, AmountToAdd);
+	int32 ActualAmountToAdd = FMath::Min(MaxAmmo - ClipSize - AmmoInReserve, AmountToAdd);
 	AmmoInReserve = AmmoInReserve + ActualAmountToAdd;
-	if (NumRoundsInClip < ClipSize)
+	if (NumRoundsInClip <= 0)
 	{
 		StartReload();
 	}
@@ -139,6 +139,8 @@ void UGunComponent::FinishReloading()
 	
 	bIsReloading = false;
 	OnReloadStateChanged.Broadcast(this, false, false);
+	//UE_LOG(LogTemp, Warning, TEXT("Rounds in clip: %s"), *FString::FromInt(NumRoundsInClip));
+	//UE_LOG(LogTemp, Warning, TEXT("Ammo left: %s"), *FString::FromInt(AmmoInReserve));
 }
 
 AController* UGunComponent::GetOwnerController() const
