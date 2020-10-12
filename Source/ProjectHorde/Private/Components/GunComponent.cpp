@@ -23,7 +23,7 @@ UGunComponent::UGunComponent()
 
 	bIsReloading = false;
 	AmmoInReserve = FMath::Max(MaxAmmo - ClipSize, 0);
-	NumRoundsInClip = FMath::Max(ClipSize, 0);
+	AmmoInClip = FMath::Max(ClipSize, 0);
 
 	SetIsReplicatedByDefault(true);
 }
@@ -34,18 +34,14 @@ void UGunComponent::BeginPlay()
 	Super::BeginPlay();
 
 	MeshComp = Cast<USkeletalMeshComponent>(GetOwner()->GetComponentByClass(USkeletalMeshComponent::StaticClass()));
+
+	bIsReloading = false;
+	AmmoInReserve = FMath::Max(MaxAmmo - ClipSize, 0);
+	AmmoInClip = FMath::Max(ClipSize, 0);
 }
 
 void UGunComponent::Shoot()
 {
-	if (bIsReloading)
-	{
-		GetOwner()->GetWorldTimerManager().ClearTimer(ReloadTimer);
-		bIsReloading = false;
-		OnReloadStateChanged.Broadcast(this, false, true);
-		UE_LOG(LogTemp, Warning, TEXT("Reload cancelled"));
-	}
-
 	AActor* MyOwner = GetOwner();
 	if (!MyOwner) return;
 
@@ -58,16 +54,21 @@ void UGunComponent::Shoot()
 		return;
 	}
 
-	if (NumRoundsInClip < 1)
+	if (bIsReloading)
+	{
+		GetOwner()->GetWorldTimerManager().ClearTimer(ReloadTimer);
+		bIsReloading = false;
+		OnReloadStateChanged.Broadcast(this, false, true);
+	}
+
+	if (AmmoInClip < 1)
 	{
 		StartReload();
 		return;
 	}
 
-	NumRoundsInClip--;
-
-	UE_LOG(LogTemp, Warning, TEXT("Rounds in clip: %s"), *FString::FromInt(NumRoundsInClip));
-	UE_LOG(LogTemp, Warning, TEXT("Ammo left: %s"), *FString::FromInt(AmmoInReserve));
+	AmmoInClip--;
+	OnAmmoStateChanged.Broadcast(this, AmmoInClip, AmmoInReserve);
 
 	PlayFireEffects(HitScanTrace.TraceTo);
 
@@ -112,9 +113,9 @@ void UGunComponent::ProcessHit(FHitResult& Hit, FVector& ShotDirection)
 
 void UGunComponent::AddAmmo(int32 AmountToAdd)
 {
-	int32 ActualAmountToAdd = FMath::Min(MaxAmmo - AmmoInReserve - NumRoundsInClip, AmountToAdd);
+	int32 ActualAmountToAdd = FMath::Min(MaxAmmo - AmmoInReserve - AmmoInClip, AmountToAdd);
 	AmmoInReserve = AmmoInReserve + ActualAmountToAdd;
-	if (NumRoundsInClip < ClipSize)
+	if (AmmoInClip < ClipSize)
 	{
 		StartReload();
 	}
@@ -122,6 +123,15 @@ void UGunComponent::AddAmmo(int32 AmountToAdd)
 
 void UGunComponent::StartReload()
 {
+	AActor* MyOwner = GetOwner();
+	if (!MyOwner) return;
+
+	if (!MyOwner->HasAuthority())
+	{
+		ServerReload();
+		return;
+	}
+
 	if (AmmoInReserve > 0 && !bIsReloading)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Reloading..."));
@@ -133,12 +143,13 @@ void UGunComponent::StartReload()
 
 void UGunComponent::FinishReloading()
 {
-	int32 ReloadAmount = FMath::Min(ClipSize - NumRoundsInClip, AmmoInReserve);
-	NumRoundsInClip += ReloadAmount;
+	int32 ReloadAmount = FMath::Min(ClipSize - AmmoInClip, AmmoInReserve);
+	AmmoInClip += ReloadAmount;
 	AmmoInReserve -= ReloadAmount;
+	OnAmmoStateChanged.Broadcast(this, AmmoInClip, AmmoInReserve);
 	
 	bIsReloading = false;
-	OnReloadStateChanged.Broadcast(this, false, false);
+	OnReloadStateChanged.Broadcast(this, false, true);
 }
 
 AController* UGunComponent::GetOwnerController() const
@@ -186,6 +197,21 @@ void UGunComponent::OnRep_HitScanTrace()
 	PlayFireEffects(HitScanTrace.TraceTo);
 
 	PlayImpactEffects(HitScanTrace.SurfaceType, HitScanTrace.TraceTo);
+}
+
+void UGunComponent::OnRep_IsReloading(bool WasReloading)
+{
+	OnReloadStateChanged.Broadcast(this, bIsReloading, WasReloading);
+}
+
+void UGunComponent::OnRep_AmmoInClip()
+{
+	OnAmmoStateChanged.Broadcast(this, AmmoInClip, AmmoInReserve);
+}
+
+void UGunComponent::OnRep_AmmoInReserve()
+{
+	OnAmmoStateChanged.Broadcast(this, AmmoInClip, AmmoInReserve);
 }
 
 void UGunComponent::PlayFireEffects(FVector TracerEndPoint)
@@ -239,9 +265,22 @@ bool UGunComponent::ServerShoot_Validate()
 	return true;
 }
 
+void UGunComponent::ServerReload_Implementation()
+{
+	StartReload();
+}
+
+bool UGunComponent::ServerReload_Validate()
+{
+	return true;
+}
+
 void UGunComponent::GetLifetimeReplicatedProps(TArray <FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UGunComponent, HitScanTrace);
+	DOREPLIFETIME(UGunComponent, bIsReloading);
+	DOREPLIFETIME(UGunComponent, AmmoInClip);
+	DOREPLIFETIME(UGunComponent, AmmoInReserve);
 }
