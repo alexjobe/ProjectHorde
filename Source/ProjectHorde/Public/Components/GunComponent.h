@@ -80,6 +80,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
 	UParticleSystem* MuzzleGlow = nullptr;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Effects")
+	UAnimMontage* FireMontage = nullptr;
+
 	USkeletalMeshComponent* MeshComp = nullptr;
 
 	UPROPERTY(ReplicatedUsing=OnRep_HitScanTrace)

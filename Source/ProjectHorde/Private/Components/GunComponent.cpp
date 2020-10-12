@@ -4,6 +4,7 @@
 #include "Components/GunComponent.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "DrawDebugHelpers.h"
+#include "GameFramework/Character.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
 #include "Particles/ParticleSystemComponent.h"
@@ -115,6 +116,7 @@ void UGunComponent::AddAmmo(int32 AmountToAdd)
 {
 	int32 ActualAmountToAdd = FMath::Min(MaxAmmo - AmmoInReserve - AmmoInClip, AmountToAdd);
 	AmmoInReserve = AmmoInReserve + ActualAmountToAdd;
+	OnAmmoStateChanged.Broadcast(this, AmmoInClip, AmmoInReserve);
 	if (AmmoInClip < ClipSize)
 	{
 		StartReload();
@@ -226,6 +228,15 @@ void UGunComponent::PlayFireEffects(FVector TracerEndPoint)
 	if (MuzzleFlash)
 	{
 		UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, MeshComp, TEXT("Muzzle_01"));
+	}
+
+	if (FireMontage)
+	{
+		ACharacter* OwnerChar = Cast<ACharacter>(GetOwner());
+		if (OwnerChar)
+		{
+			OwnerChar->PlayAnimMontage(FireMontage);
+		}
 	}
 }
 
