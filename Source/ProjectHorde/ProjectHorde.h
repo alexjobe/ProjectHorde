@@ -8,3 +8,6 @@
 
 #define SURFACE_FLESH_DEFAULT		EPhysicalSurface::SurfaceType1
 #define SURFACE_FLESH_CRITICAL		EPhysicalSurface::SurfaceType2
+
+#define TEAM_ID_PLAYERS             1
+#define TEAM_ID_AI                  2
