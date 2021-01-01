@@ -50,6 +50,12 @@ void AShooterCharacter::BeginPlay()
 	}
 }
 
+void AShooterCharacter::Restart()
+{
+	Super::Restart();
+	OnRestart();
+}
+
 // Called to bind functionality to input
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {

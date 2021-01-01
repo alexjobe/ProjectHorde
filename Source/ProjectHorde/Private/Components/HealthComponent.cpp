@@ -46,14 +46,6 @@ void UHealthComponent::OnHealthUpdate(float OldHealth)
 
 	float HealthChangeAmount = CurrentHealth - OldHealth;
 	OnHealthChanged.Broadcast(this, CurrentHealth, HealthChangeAmount, nullptr, nullptr, nullptr);
-
-	if (MyOwner && MyOwner->HasAuthority())
-	{
-		if (CurrentHealth <= 0.f)
-		{
-			bIsDead = true;
-		}
-	}
 }
 
 void UHealthComponent::SetCurrentHealth(float NewHealth)

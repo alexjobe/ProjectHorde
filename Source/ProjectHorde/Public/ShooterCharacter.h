@@ -18,6 +18,8 @@ public:
 	// Property replication
 	void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	void Restart() override;
+
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components");
 	class UCameraComponent* CameraComp = nullptr;
@@ -80,6 +82,9 @@ protected:
 
 	UFUNCTION()
 	void OnHealthChanged(class UHealthComponent* HealthComponent, float Health, float HealthChangeAmount, const UDamageType* DamageType, AController* InstigatedBy, AActor* DamageCauser);
+	
+	UFUNCTION(BlueprintImplementableEvent, Category = "Events")
+	void OnRestart();
 
 public:
 	// Base turn rate, in deg/sec
