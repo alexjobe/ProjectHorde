@@ -8,6 +8,8 @@
 #include "OnlineSubsystem.h"
 #include "UObject/ConstructorHelpers.h"
 
+#include "ProjectHorde/MenuSystem/LobbyMenu.h"
+#include "ProjectHorde/MenuSystem/LobbyPlayerState.h"
 #include "ProjectHorde/MenuSystem/MainMenu.h"
 #include "ProjectHorde/MenuSystem/MenuWidget.h"
 
@@ -20,6 +22,11 @@ UHordeGameInstance::UHordeGameInstance(const FObjectInitializer& ObjectInitializ
 	if (!ensure(MenuBPClass.Class != nullptr)) return;
 
 	MainMenuClass = MenuBPClass.Class;
+
+	ConstructorHelpers::FClassFinder<UUserWidget> LobbyMenuBPClass(TEXT("/Game/MenuSystem/WBP_LobbyMenu"));
+	if (!ensure(LobbyMenuBPClass.Class != nullptr)) return;
+
+	LobbyMenuClass = LobbyMenuBPClass.Class;
 
 	ConstructorHelpers::FClassFinder<UUserWidget> InGameMenuBPClass(TEXT("/Game/MenuSystem/WBP_InGameMenu"));
 	if (!ensure(InGameMenuBPClass.Class != nullptr)) return;
@@ -58,6 +65,18 @@ void UHordeGameInstance::LoadMainMenuWidget()
 	MainMenu->Setup();
 
 	MainMenu->SetMenuInterface(this);
+}
+
+void UHordeGameInstance::LoadLobbyMenuWidget()
+{
+	if (!ensure(LobbyMenuClass != nullptr)) return;
+
+	LobbyMenu = CreateWidget<ULobbyMenu>(this, LobbyMenuClass);
+	if (!ensure(LobbyMenu != nullptr)) return;
+
+	LobbyMenu->Setup();
+
+	LobbyMenu->SetMenuInterface(this);
 }
 
 void UHordeGameInstance::LoadInGameMenuWidget()
@@ -142,7 +161,7 @@ void UHordeGameInstance::OnCreateSessionComplete(FName SessionName, bool Success
 	UWorld* World = GetWorld();
 	if (!ensure(World != nullptr)) return;
 
-	World->ServerTravel("/Game/Maps/TestMap?listen");
+	World->ServerTravel("/Game/MenuSystem/LobbyMenu?listen");
 }
 
 void UHordeGameInstance::StartSession()
@@ -159,10 +178,17 @@ void UHordeGameInstance::RefreshServerList()
 	if (SessionSearch.IsValid())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Searching for sessions..."));
-		SessionSearch->MaxSearchResults = 100;
+		SessionSearch->MaxSearchResults = 1000;
 		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
+}
+
+void UHordeGameInstance::UpdateLobbyList(const TArray <ALobbyPlayerState*> PlayerArray)
+{
+	if (LobbyMenu == nullptr) return;
+
+	LobbyMenu->SetLobbyList(PlayerArray);
 }
 
 void UHordeGameInstance::OnFindSessionsComplete(bool Success)

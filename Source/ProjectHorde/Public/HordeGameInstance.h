@@ -28,6 +28,9 @@ public:
 	void LoadMainMenuWidget();
 
 	UFUNCTION(BlueprintCallable)
+	void LoadLobbyMenuWidget();
+
+	UFUNCTION(BlueprintCallable)
 	void LoadInGameMenuWidget();
 
 	void Play() override;
@@ -42,14 +45,19 @@ public:
 
 	void RefreshServerList() override;
 
+	UFUNCTION(BlueprintCallable)
+	void UpdateLobbyList(const TArray<class ALobbyPlayerState*> PlayerArray);
+
 	void StartSession();
 
 private:
 
 	TSubclassOf<class UMenuWidget> MainMenuClass;
 	TSubclassOf<class UMenuWidget> InGameMenuClass;
+	TSubclassOf<class UMenuWidget> LobbyMenuClass;
 
 	class UMainMenu* MainMenu;
+	class ULobbyMenu* LobbyMenu;
 	class UMenuWidget* InGameMenu;
 
 	IOnlineSessionPtr SessionInterface;

@@ -40,13 +40,13 @@ private:
 	class UMenuButton* MainMenu_JoinButton;
 
 	UPROPERTY(meta = (BindWidget))
+	class UMenuButton* MainMenu_QuitButton;
+
+	UPROPERTY(meta = (BindWidget))
 	class UMenuButton* JoinMenu_BackButton;
 
 	UPROPERTY(meta = (BindWidget))
 	class UMenuButton* JoinMenu_JoinButton;
-
-	UPROPERTY(meta = (BindWidget))
-	class UButton* MainMenu_QuitButton;
 
 	UPROPERTY(meta = (BindWidget))
 	class UWidgetSwitcher* MenuSwitcher;
