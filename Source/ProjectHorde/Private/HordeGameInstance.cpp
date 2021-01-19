@@ -9,7 +9,6 @@
 #include "UObject/ConstructorHelpers.h"
 
 #include "ProjectHorde/MenuSystem/LobbyMenu.h"
-#include "ProjectHorde/MenuSystem/LobbyPlayerState.h"
 #include "ProjectHorde/MenuSystem/MainMenu.h"
 #include "ProjectHorde/MenuSystem/MenuWidget.h"
 
@@ -270,4 +269,12 @@ void UHordeGameInstance::LoadMainMenu()
 
 	// Travel to main menu level
 	PlayerController->ClientTravel("/Game/MenuSystem/MainMenu", ETravelType::TRAVEL_Absolute);
+}
+
+void UHordeGameInstance::TeardownLobbyMenu()
+{
+	if (LobbyMenu)
+	{
+		LobbyMenu->Teardown();
+	}
 }

@@ -20,6 +20,8 @@ public:
 
 	virtual bool Initialize() override;
 
+	virtual void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) override;
+
 	UFUNCTION(BlueprintCallable)
 	void SetLobbyList(const TArray<class ALobbyPlayerState*> PlayerArray);
 

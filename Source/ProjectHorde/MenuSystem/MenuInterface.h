@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+
+#include "LobbyPlayerState.h"
+
 #include "MenuInterface.generated.h"
 
 USTRUCT()
@@ -39,4 +42,6 @@ public:
 	virtual void Join(const uint32 Index) = 0;
 	virtual void LoadMainMenu() = 0;
 	virtual void RefreshServerList() = 0;
+	virtual void UpdateLobbyList(const TArray<ALobbyPlayerState*> PlayerArray) = 0;
+	virtual void TeardownLobbyMenu() = 0;
 };

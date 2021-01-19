@@ -13,5 +13,14 @@ UCLASS()
 class PROJECTHORDE_API ALobbyGameState : public AGameStateBase
 {
 	GENERATED_BODY()
-	
+
+public:
+
+	void PlayerJoined();
+
+	UFUNCTION(Server, Reliable)
+	void CheckAllPlayersReady();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void PrepareToTravel();
 };

@@ -21,7 +21,7 @@ public:
 
 	bool GetReadyState() const;
 
-	UFUNCTION(Server, Unreliable)
+	UFUNCTION(Server, Reliable)
 	void ToggleReady();
 
 	UFUNCTION(BlueprintImplementableEvent)

@@ -73,3 +73,12 @@ void ULobbyMenu::ToggleReady()
 
 	PlayerState->ToggleReady();
 }
+
+void ULobbyMenu::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
+{
+	Super::OnLevelRemovedFromWorld(InLevel, InWorld);
+
+	UE_LOG(LogTemp, Warning, TEXT("LobbyMenu Teardown"));
+
+	Teardown();
+}

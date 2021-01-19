@@ -6,6 +6,7 @@
 #include "Engine/GameInstance.h"
 #include "Interfaces/OnlineSessionInterface.h"
 
+#include "ProjectHorde/MenuSystem/LobbyPlayerState.h"
 #include "ProjectHorde/MenuSystem/MenuInterface.h"
 
 #include "HordeGameInstance.generated.h"
@@ -46,9 +47,11 @@ public:
 	void RefreshServerList() override;
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateLobbyList(const TArray<class ALobbyPlayerState*> PlayerArray);
+	void UpdateLobbyList(const TArray<ALobbyPlayerState*> PlayerArray) override;
 
 	void StartSession();
+
+	void TeardownLobbyMenu() override;
 
 private:
 
