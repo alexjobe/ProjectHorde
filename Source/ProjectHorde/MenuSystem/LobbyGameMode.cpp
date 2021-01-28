@@ -4,6 +4,7 @@
 #include "LobbyGameMode.h"
 
 #include "LobbyGameState.h"
+#include "MenuInterface.h"
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 {
@@ -13,18 +14,22 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	LobbyGameState->PlayerJoined();
 }
 
-void ALobbyGameMode::StartGame()
+void ALobbyGameMode::BeginStartGameCountdown()
 {
-	UWorld* World = GetWorld();
-	if (!ensure(World != nullptr)) return;
-
-	bUseSeamlessTravel = true;
-
 	ALobbyGameState* LobbyGameState = GetGameState<ALobbyGameState>();
 	if (!ensure(LobbyGameState != nullptr)) return;
 	LobbyGameState->PrepareToTravel();
 
-	UE_LOG(LogTemp, Warning, TEXT("Traveling..."));
+	// Set countdown timer to begin game
+	GetWorldTimerManager().SetTimer(TimerHandle_Countdown, this, &ALobbyGameMode::StartGame, CountdownDuration);
+}
 
-	World->ServerTravel("/Game/Maps/TestMap?listen");
+void ALobbyGameMode::StartGame()
+{
+	IMenuInterface* Interface = Cast<IMenuInterface>(GetGameInstance());
+	if (!ensure(Interface != nullptr)) return;
+
+	bUseSeamlessTravel = true;
+
+	Interface->Play();
 }

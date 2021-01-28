@@ -18,5 +18,13 @@ public:
 
 	void PostLogin(APlayerController* NewPlayer) override;
 
+	void BeginStartGameCountdown();
+
+private:
+
 	void StartGame();
+
+	float CountdownDuration = 10.f;
+
+	FTimerHandle TimerHandle_Countdown;
 };

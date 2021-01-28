@@ -63,7 +63,11 @@ void ULobbyMenu::SetLobbyList(const TArray<ALobbyPlayerState*> PlayerArray)
 
 void ULobbyMenu::LeaveLobby()
 {
-
+	if (MenuInterface != nullptr)
+	{
+		Teardown();
+		MenuInterface->LoadMainMenu();
+	}
 }
 
 void ULobbyMenu::ToggleReady()
@@ -72,13 +76,4 @@ void ULobbyMenu::ToggleReady()
 	if (!ensure(PlayerState != nullptr)) return;
 
 	PlayerState->ToggleReady();
-}
-
-void ULobbyMenu::OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld)
-{
-	Super::OnLevelRemovedFromWorld(InLevel, InWorld);
-
-	UE_LOG(LogTemp, Warning, TEXT("LobbyMenu Teardown"));
-
-	Teardown();
 }

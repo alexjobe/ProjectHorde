@@ -23,4 +23,6 @@ public:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void PrepareToTravel();
+
+	void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 };

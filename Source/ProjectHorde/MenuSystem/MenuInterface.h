@@ -43,5 +43,6 @@ public:
 	virtual void LoadMainMenu() = 0;
 	virtual void RefreshServerList() = 0;
 	virtual void UpdateLobbyList(const TArray<ALobbyPlayerState*> PlayerArray) = 0;
+	virtual void BeginCountdown() = 0;
 	virtual void TeardownLobbyMenu() = 0;
 };

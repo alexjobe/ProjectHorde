@@ -3,7 +3,6 @@
 
 #include "HordeGameInstance.h"
 #include "Blueprint/UserWidget.h"
-#include "Kismet/GameplayStatics.h"
 #include "OnlineSessionSettings.h"
 #include "OnlineSubsystem.h"
 #include "UObject/ConstructorHelpers.h"
@@ -95,8 +94,10 @@ void UHordeGameInstance::Play()
 	APlayerController* PlayerController = GetFirstLocalPlayerController();
 	if (!ensure(PlayerController != nullptr)) return;
 
-	UGameplayStatics::OpenLevel(this, "/Game/Maps/TestMap");
+	UWorld* World = GetWorld();
+	if (!ensure(World != nullptr)) return;
 
+	World->ServerTravel("/Game/Maps/Map1");
 }
 
 void UHordeGameInstance::Host(FString ServerName)
@@ -269,6 +270,14 @@ void UHordeGameInstance::LoadMainMenu()
 
 	// Travel to main menu level
 	PlayerController->ClientTravel("/Game/MenuSystem/MainMenu", ETravelType::TRAVEL_Absolute);
+}
+
+void UHordeGameInstance::BeginCountdown()
+{
+	if (LobbyMenu)
+	{
+		LobbyMenu->BeginCountdown();
+	}
 }
 
 void UHordeGameInstance::TeardownLobbyMenu()

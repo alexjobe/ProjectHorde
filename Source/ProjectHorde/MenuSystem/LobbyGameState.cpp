@@ -37,11 +37,20 @@ void ALobbyGameState::CheckAllPlayersReady_Implementation()
 	ALobbyGameMode* GameMode = Cast<ALobbyGameMode>(UGameplayStatics::GetGameMode(this));
 	if (!ensure(GameMode != nullptr)) return;
 
-	GameMode->StartGame();
+	GameMode->BeginStartGameCountdown();
 }
 
 void ALobbyGameState::PrepareToTravel_Implementation()
 {
+	IMenuInterface* MenuInterface = Cast<IMenuInterface>(GetGameInstance());
+	if (!ensure(MenuInterface != nullptr)) return;
+	MenuInterface->BeginCountdown();
+}
+
+void ALobbyGameState::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
 	IMenuInterface* MenuInterface = Cast<IMenuInterface>(GetGameInstance());
 	if (!ensure(MenuInterface != nullptr)) return;
 	MenuInterface->TeardownLobbyMenu();

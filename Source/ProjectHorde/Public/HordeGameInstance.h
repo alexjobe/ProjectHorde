@@ -51,6 +51,8 @@ public:
 
 	void StartSession();
 
+	void BeginCountdown() override;
+
 	void TeardownLobbyMenu() override;
 
 private:
