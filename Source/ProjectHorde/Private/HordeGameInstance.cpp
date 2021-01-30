@@ -51,6 +51,11 @@ void UHordeGameInstance::Init()
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to find online subsystem!"));
 	}
+
+	if (GEngine != nullptr)
+	{
+		GEngine->OnNetworkFailure().AddUObject(this, &UHordeGameInstance::OnNetworkFailure);
+	}
 }
 
 void UHordeGameInstance::LoadMainMenuWidget()
@@ -178,7 +183,7 @@ void UHordeGameInstance::RefreshServerList()
 	if (SessionSearch.IsValid())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Searching for sessions..."));
-		SessionSearch->MaxSearchResults = 1000;
+		SessionSearch->MaxSearchResults = 10000;
 		SessionSearch->QuerySettings.Set(SEARCH_PRESENCE, true, EOnlineComparisonOp::Equals);
 		SessionInterface->FindSessions(0, SessionSearch.ToSharedRef());
 	}
@@ -261,6 +266,11 @@ void UHordeGameInstance::OnDestroySessionComplete(FName SessionName, bool Succes
 	{
 		CreateSession();
 	}
+}
+
+void UHordeGameInstance::OnNetworkFailure(UWorld* World, UNetDriver* NetDriver, ENetworkFailure::Type FailureType, const FString& ErrorString)
+{
+	LoadMainMenu();
 }
 
 void UHordeGameInstance::LoadMainMenu()
